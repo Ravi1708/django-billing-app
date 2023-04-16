@@ -1,0 +1,43 @@
+name: Deploy to AWS EC2
+
+on:
+    push:
+        branches: [main]
+
+env:
+    SSH_KEY: ${{ secrets.SSH_KEY }}
+    SSH_HOST: your-ec2-instance.compute.amazonaws.com
+    SSH_USER: ec2-user
+    APP_NAME: your-django-app-name
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Install SSH client
+              run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+            - name: Add SSH private key
+              run: |
+                  mkdir -p ~/.ssh
+                  echo "${SSH_KEY}" > ~/.ssh/id_rsa
+                  chmod 600 ~/.ssh/id_rsa
+
+            - name: Connect to EC2 instance
+              uses: appleboy/ssh-action@master
+              with:
+                  host: ${{ env.SSH_HOST }}
+                  username: ${{ env.SSH_USER }}
+                  key: ${{ secrets.SSH_KEY }}
+
+            - name: Install dependencies and migrate database
+              run: |
+                  ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} "cd /home/ec2-user/${{ env.APP_NAME }} && source venv/bin/activate && pip install -r requirements.txt && python manage.py migrate"
+
+            - name: Collect static files
+              run: |
+                  ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} "cd /home/ec2-user/${{ env.APP_NAME }} && source venv/bin/activate && python manage.py collectstatic --noinput"
+
+            - name: Restart Django app
+              run: |
+                  ssh ${{ env.SSH_USER }}@${{ env.SSH_HOST }} "sudo systemctl restart ${{ env.APP_NAME }}.service"
