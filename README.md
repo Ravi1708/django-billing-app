@@ -41,3 +41,7 @@ This is a simple GST billing app. It has the following features:
 1. Easily create invoices
 2. Manage inventory
 3. Keep books and track balances
+
+## Release notes
+
+1. updated README.md
