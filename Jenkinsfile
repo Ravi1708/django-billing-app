@@ -7,7 +7,7 @@ pipeline {
     
     environment {
         SSH_USER = 'ubuntu'
-        SSH_KEY = credentials('./ssh-key.key')
+        SSH_KEY = credentials('ssh-key.key')
         APP_NAME = 'billing_software'
         REMOTE_HOST = 'ec2-43-205-217-147.ap-south-1.compute.amazonaws.com'
         REMOTE_DIR = '/var/www/billing_software/'
@@ -16,12 +16,6 @@ pipeline {
     }
     
     stages {
-
-        stage('Clone Repository') {
-            steps {
-                git branch: 'master', url: 'https://github.com/Ravi1708/django-billing-app.git'
-            }
-        }
 
         stage('Install Dependencies') {
             steps {
