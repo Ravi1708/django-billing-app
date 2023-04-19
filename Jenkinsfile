@@ -17,6 +17,12 @@ pipeline {
     
     stages {
 
+        stage('Clone Repository') {
+            steps {
+                git branch: 'master', url: 'https://github.com/Ravi1708/django-billing-app.git'
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 sh "python3 -m venv ${VIRTUALENV_DIR}"
