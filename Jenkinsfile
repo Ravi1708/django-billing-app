@@ -24,7 +24,13 @@ pipeline {
             steps {
                 sshagent (credentials: ['ssh-key.key']) {
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'sudo rm -rf ${REMOTE_DIR}/*'"
+                    
+                    // copy files to remote host
                     sh "scp -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} -r ${WORKSPACE}/* ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
+                    
+                    // create virtualenv
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'python3 -m venv ${VIRTUALENV_DIR}'"
+                    
                     // enter virtualenv
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate'"
                     // install requirements
