@@ -33,6 +33,9 @@ pipeline {
                     
                     // install requirements
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate && pip install -r ${REMOTE_DIR}${REQUIREMENTS_FILE}'"
+
+                    // create .env file in gstbilling directory
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'touch ${REMOTE_DIR}gstbilling/.env'"
                     // run migrations
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate && cd ${REMOTE_DIR} && python manage.py migrate'"
 
