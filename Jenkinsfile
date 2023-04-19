@@ -1,3 +1,6 @@
+import org.jenkinsci.plugins.credentials.*
+
+
 pipeline {
     agent {
         node {
