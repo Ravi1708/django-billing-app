@@ -31,14 +31,11 @@ pipeline {
                     // create virtualenv
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'python3 -m venv ${VIRTUALENV_DIR}'"
                     
-                    // enter virtualenv
-                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate'"
                     // install requirements
-                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'pip install -r ${REMOTE_DIR}${REQUIREMENTS_FILE}'"
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate && pip install -r ${REMOTE_DIR}${REQUIREMENTS_FILE}'"
                     // run migrations
-                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'python ${REMOTE_DIR}manage.py migrate'"
-                    // exit virtualenv
-                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'deactivate'"
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate && cd ${REMOTE_DIR} && python manage.py migrate'"
+
                     // restart apache2
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'sudo systemctl restart apache2'"
                 }
