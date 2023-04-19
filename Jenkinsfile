@@ -22,7 +22,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key.key', keyFileVariable: 'MY_SSH_KEY', passphraseVariable: '', usernameVariable: 'SSH_USER')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key.key')]) {
                     sh "rsync -avz -e 'ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY}' ${REQUIREMENTS_FILE} ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
                     sh "python3 -m venv ${VIRTUALENV_DIR}"
                     sh "source ${VIRTUALENV_DIR}/bin/activate"
