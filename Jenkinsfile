@@ -19,9 +19,12 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh "python3 -m venv ${VIRTUALENV_DIR}"
-                sh "source ${VIRTUALENV_DIR}/bin/activate"
-                sh "pip install -r ${REQUIREMENTS_FILE}"
+                withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'SSH_KEY', passphraseVariable: '', usernameVariable: 'SSH_USER')]) {
+                    sh "rsync -avz -e 'ssh -o StrictHostKeyChecking=no -i ${SSH_KEY}' ${REQUIREMENTS_FILE} ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
+                    sh "python3 -m venv ${VIRTUALENV_DIR}"
+                    sh "source ${VIRTUALENV_DIR}/bin/activate"
+                    sh "pip install -r ${REQUIREMENTS_FILE}"
+                }
             }
         }
 
@@ -30,7 +33,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'SSH_KEY', passphraseVariable: '', usernameVariable: 'SSH_USER')]) {
                     sh "rsync -avz -e 'ssh -o StrictHostKeyChecking=no -i ${SSH_KEY}' . ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
-                    sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'cd ${REMOTE_DIR} && source ${VIRTUALENV_DIR}/bin/activate && python manage.py migrate && python manage.py collectstatic --noinput'"
+                    sh "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'cd ${REMOTE_DIR} && source ${VIRTUALENV_DIR}/bin/activate && python manage.py migrate'"
                 }
             }
         }
