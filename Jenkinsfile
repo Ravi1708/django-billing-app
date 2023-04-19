@@ -1,5 +1,9 @@
 pipeline {
-    agent aws
+    agent {
+        node {
+            label 'aws'
+        }
+    }
     
     environment {
         SSH_USER = 'ubuntu'
