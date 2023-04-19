@@ -20,31 +20,25 @@ pipeline {
     
     stages {
 
-        stage('Install Dependencies') {
-            steps {   
-                sh "rsync -avz -e 'ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY}' ${REQUIREMENTS_FILE} ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
-                sh "python3 -m venv ${VIRTUALENV_DIR}"
-                sh "source ${VIRTUALENV_DIR}/bin/activate"
-                sh "pip install -r ${REQUIREMENTS_FILE}"
-            }
-        }
-
-
         stage('Deploy to EC2') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'MY_SSH_KEY', passphraseVariable: '', usernameVariable: 'SSH_USER')]) {
-                    sh "rsync -avz -e 'ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY}' . ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
-                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'cd ${REMOTE_DIR} && source ${VIRTUALENV_DIR}/bin/activate && python manage.py migrate'"
-                }
-            }
-        }
-        
-        stage('Restart Application') {
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'aws-ssh-key', keyFileVariable: 'MY_SSH_KEY', passphraseVariable: '', usernameVariable: 'SSH_USER')]) {
+                sshagent (credentials: ['ssh-key.key']) {
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'sudo rm -rf ${REMOTE_DIR}/*'"
+                    sh "scp -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} -r ${WORKSPACE}/* ${SSH_USER}@${REMOTE_HOST}:${REMOTE_DIR}"
+                    // enter virtualenv
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'source ${VIRTUALENV_DIR}/bin/activate'"
+                    // install requirements
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'pip install -r ${REMOTE_DIR}${REQUIREMENTS_FILE}'"
+                    // run migrations
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'python ${REMOTE_DIR}manage.py migrate'"
+                    // exit virtualenv
+                    sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'deactivate'"
+                    // restart apache2
                     sh "ssh -o StrictHostKeyChecking=no -i ${MY_SSH_KEY} ${SSH_USER}@${REMOTE_HOST} 'sudo systemctl restart apache2'"
                 }
             }
         }
+
+
     }
 }
