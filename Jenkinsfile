@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.credentials.*
 pipeline {
     agent {
         node {
-            label 'aws'
+            label 'aws agent'
         }
     }
     
